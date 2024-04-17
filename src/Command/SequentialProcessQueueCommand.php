@@ -75,31 +75,36 @@ class SequentialProcessQueueCommand extends AbstractCommand
             exit(1);
         }
 
-        $itemIds = $this->queueService->getAllQueueEntryIds(ImportProcessingService::EXECUTION_TYPE_SEQUENTIAL);
-        $itemCount = count($itemIds);
-
-        $output->writeln("Processing {$itemCount} items sequentially\n");
-
-        $progressBar = new ProgressBar($output, $itemCount);
-        $progressBar->start();
-
-        foreach ($itemIds as $i => $id) {
-            $this->importProcessingService->processQueueItem($id);
-            $progressBar->advance();
-
-            // call the garbage collector to avoid too many connections & memory issue
-            if (($i + 1) % 200 === 0) {
-                \Pimcore::collectGarbage();
+        try {
+            $itemIds = $this->queueService->getAllQueueEntryIds(ImportProcessingService::EXECUTION_TYPE_SEQUENTIAL);
+            $itemCount = count($itemIds);
+    
+            $output->writeln("Processing {$itemCount} items sequentially\n");
+    
+            $progressBar = new ProgressBar($output, $itemCount);
+            $progressBar->start();
+    
+            foreach ($itemIds as $i => $id) {
+                $this->importProcessingService->processQueueItem($id);
+                $progressBar->advance();
+    
+                // call the garbage collector to avoid too many connections & memory issue
+                if (($i + 1) % 200 === 0) {
+                    \Pimcore::collectGarbage();
+                }
             }
+    
+            $progressBar->finish();
+    
+            $this->release(); //release the lock
+    
+            $output->writeln("\n\nProcessed {$itemCount} items.");
+    
+            return 0;
+        } catch (\Throwable $t) {
+            $this->release();
+            throw $t;
         }
-
-        $progressBar->finish();
-
-        $this->release(); //release the lock
-
-        $output->writeln("\n\nProcessed {$itemCount} items.");
-
-        return 0;
     }
 
     /**
