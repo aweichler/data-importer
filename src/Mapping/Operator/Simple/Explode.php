@@ -45,6 +45,9 @@ class Explode extends AbstractOperator
      */
     public function process($inputData, bool $dryRun = false)
     {
+        if (empty($inputData)) {
+            return [];
+        }
         if (!empty($this->delimiter)) {
             if (is_array($inputData)) {
                 $explodedArray = [];
@@ -58,15 +61,9 @@ class Explode extends AbstractOperator
 
                 return $explodedArray;
             } else {
-                if (empty($inputData)) {
-                    return [];
-                }
                 return explode($this->delimiter, $inputData);
             }
         } else {
-            if (empty($inputData)) {
-                return [];
-            }
             return [$inputData];
         }
     }
