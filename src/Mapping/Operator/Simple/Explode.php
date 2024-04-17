@@ -58,9 +58,15 @@ class Explode extends AbstractOperator
 
                 return $explodedArray;
             } else {
+                if (empty($inputData)) {
+                    return [];
+                }
                 return explode($this->delimiter, $inputData);
             }
         } else {
+            if (empty($inputData)) {
+                return [];
+            }
             return [$inputData];
         }
     }
